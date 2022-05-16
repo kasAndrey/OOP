@@ -1,42 +1,66 @@
-enum class Grade(val value: Int) {
-    A(5),
-    B(4),
-    C(3),
-    NOT_FINISHED(0)
+/*Реализовать иерархию классов приложения “заметки”. У каждой заметки должно быть названия (title), цвет(color)
+и содержимое (content). Контент должен быть реализован в виде sealed класса с следующими наследниками:
+
+Text - контект, который хранит в себе список строк
+Image - хранит одну строку, которая представляет собой ссылку или путь в системе к файлу с картинкой
+ToDoList - список элементов из названия задачи и отметки о том, выполнена она или нет
+
+В функции main создать список из нескольких заметок с разным типом контента и вывести его в консоль.
+
+Опционально добавить валидацию данных при создании объектов.*/
+
+enum class Color {
+    RED,
+    GREEN,
+    BLUE,
+    GRAY,
+    BLACK,
+    YELLOW,
+    MAGENTA,
+    CYAN,
+    WHITE,
 }
 
-data class Course(
-    val title: String,
-    val grade: Grade,
-)
+data class ToDoListItem(var note: String, var checked: Boolean)
 
-data class Student(
-    val firstName: String,
-    val lastName: String,
-    val age: Int,
-    val emails: List<String>,
-    val phones: List<String>,
-    val courses: List<Course>
-)
+sealed class NoteContent {
+    data class Text(val text: List<String>) : NoteContent()
+    //контект, который хранит в себе список строк
+
+    data class Image(val ref: String) : NoteContent() {
+        init {
+            require(ref.isNotBlank()) { "Blank ref" }
+        }
+    }
+    //хранит одну строку, которая представляет собой ссылку или путь в системе к файлу с картинкой
+
+    data class ToDoList(val tasks: List<ToDoListItem>) : NoteContent()
+    //список элементов из названия задачи и отметки о том, выполнена она или нет
+
+}
+
+data class Note(val title: String, val color: Color, val noteContent: NoteContent)
+
 
 fun main() {
-    val students = loadStudents()
-    val ivans = students.filter { it.firstName == "Ivan" }
-    val adultNotIvans = students.filter { it.firstName != "Ivan" && it.age >= 18 }
+    println("Hello World!")
 
-    val studentWithContacts = students.filter { it.emails.isNotEmpty() || it.phones.isNotEmpty() }
-    val fullNames = students.map { "${it.firstName} ${it.lastName} - ${it.age}" }
+    val users: MutableList<Note> = mutableListOf()
+    users.add(Note("Exams balls", Color.BLACK, NoteContent.Image("exams.path")))
+    users.add(Note("Students", Color.CYAN, NoteContent.Text(listOf("Ivan", "Sergey", "Katya"))))
+    users.add(
+        Note(
+            "My Dreams", Color.BLUE, NoteContent.ToDoList(
+                listOf(
+                    ToDoListItem("Write labs", false),
+                    ToDoListItem("Win lottery", false),
+                    ToDoListItem("Buy car", true),
+                )
+            )
+        )
+    )
 
-    val studentAndTheirAvgGrade = students.map { student ->
-        val avg = student.courses
-            .filter { course -> course.grade != Grade.NOT_FINISHED }
-            .map { course -> course.grade.value }
-            .average()
-        student to avg
-    }
-}
+    (users[2].noteContent as NoteContent.ToDoList).tasks[1].checked = true
 
-
-fun loadStudents(): List<Student> {
-    return emptyList()
+    println(users)
 }
